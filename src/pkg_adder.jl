@@ -53,8 +53,14 @@ function clone(repo::AbstractString, branch_ish="")
   repo_namd_ext = repo_name*".jl"
   start_dir = pwd()
 
+  if isdir(joinpath( Pkg.dir(), repo_name))
+    println(STDERR, "Package $repo_name already exists, not cloning...")
+    return nothing
+  end
+
   try
     cd(Pkg.dir())
+
     run(`git clone $repo`)
 
     # rename ot remove the .jl
@@ -349,6 +355,14 @@ end
 
 function build(pkg::AbstractString)
   Pkg.build()
+end
+
+function dir()
+  Pkg.dir()
+end
+
+function dir(pkg::AbstractString)
+  Pkg.dir(pkg)
 end
 
 
