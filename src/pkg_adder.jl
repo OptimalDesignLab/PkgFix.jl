@@ -15,13 +15,28 @@ using Base.Pkg.Git
   **Inputs**
 
    * repo: repository URL
-   * branch_ish: see [`clone`](@ref)
-"""
-function add(repo::AbstractString, branch_ish="")
 
-  clone(repo, branch_ish=branch_ish)
+  **KeyWord Argument**
+   * branch_ish: see [`clone`](@ref).  Note that if branch_ish is not specified,
+     it is possible that installing dependencies may change the version of
+     the package in the repository `repo`
+"""
+function add(repo::AbstractString; branch_ish="")
+
+  repo_name = getRepoName(repo)
+
+  clone(repo, branch_ish)
+  if branch_ish != ""
+    pin(repo_name)  # make sure the resolve step does not change the version
+                    # of this package
+  end
   resolve()  # add dependencies
-  build()  # build this package
+
+  build(repo_name)  # build this package
+
+  if branch_ish != ""
+    free(repo_name)
+  end
 
   return nothing
 end
@@ -48,10 +63,17 @@ function clone(repo::AbstractString, branch_ish="")
 
 
   repo_name = getRepoName(repo)
-  repo_namd_ext = repo_name*".jl"
+  repo_name_ext = repo_name*".jl"
   start_dir = pwd()
 
-  if isdir(joinpath( Pkg.dir(), repo_name))
+  pth1 = joinpath(Pkg.dir(), repo_name)
+  pth2 = joinpath(Pkg.dir(), repo_name_ext)
+  println("pth1 = ", pth1)
+  println("pth2 = ", pth2)
+  println("isdir(pth1) = ", isdir(pth1))
+  println("isdir(pth2) = ", isdir(pth2))
+
+  if isdir(joinpath( Pkg.dir(), repo_name)) || isdir(joinpath( Pkg.dir(), repo_name_ext))
     println(STDERR, "Package $repo_name already exists, not cloning...")
     return nothing
   end
@@ -126,28 +148,32 @@ end
 """
 function getRepoName(url::AbstractString)
 
+  println("url = ", url)
   if !endswith(url, ".git")
     error("url $url does not end in .git")
   end
 
   url_stub = url[1:end-4]
+  println("url_stub = ", url_stub)
+
 
   if !endswith(url_stub, ".jl")
     error("repository name does not end in .jl")
   end
 
   url_stub = url_stub[1:end-3]
+  println("url_stub = ", url_stub)
 
   # find the final slash (which preceeds the start of the package name)
   idx = 0
-  for i=length(url):-1:1
-    if url[i] == '/'
+  for i=length(url_stub):-1:1
+    if url_stub[i] == '/'
       idx = i + 1  # record start of repo name
       break
     end
   end
 
-  repo_name = url[idx:end]
+  repo_name = url_stub[idx:end]
 
   return repo_name
 end
@@ -244,6 +270,7 @@ function pin(pkg::AbstractString)
     # package manager considers it pinned
 
     head = getHeadIdentifier(pkg)
+    println("head = ", head)
     run(`git checkout -b pinned.PKGFIX$head.tmp`)
   catch x
     cd(start_dir)
@@ -313,12 +340,15 @@ function getHeadIdentifier(pkg::AbstractString)
 
   start_dir = pwd()
 
+  str = ""
   try
     cd(joinpath(Pkg.dir(), pkg))
-    str = readcomp(`git rev-parse --abbrev-commit HEAD`)
+    str = readchomp(`git rev-parse --abbrev-ref HEAD`)
+    println("str = ", str)
 
     if str == "HEAD"  # the current head is not a branch
       str = readchomp(`git rev-parse HEAD`)
+      println("str = ", str)
     end
   catch x
     cd(start_dir)
