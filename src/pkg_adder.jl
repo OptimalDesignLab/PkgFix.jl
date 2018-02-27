@@ -1,6 +1,4 @@
 # this is a better implementatoin of Pkg.clone
-module PkgFix
-
 import Base.Pkg
 import Base.Pkg.Reqs
 using Base.Pkg.Types
@@ -368,5 +366,3 @@ end
 
 
   
-
-end # end module
