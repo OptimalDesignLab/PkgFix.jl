@@ -382,7 +382,7 @@ function resolve()
 end
 
 function build(pkg::AbstractString)
-  Pkg.build()
+  Pkg.build(pkg)
 end
 
 function dir()
