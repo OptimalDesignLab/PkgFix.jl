@@ -25,6 +25,11 @@ function add(repo::AbstractString; branch_ish="")
 
   repo_name = getRepoName(repo)
 
+  if Pkg.installed(repo_name) != Void
+    println("Package already installed, not installing...")
+    return nothing
+  end
+
   clone(repo, branch_ish)
   if branch_ish != ""
     pin(repo_name)  # make sure the resolve step does not change the version
@@ -359,6 +364,23 @@ function getHeadIdentifier(pkg::AbstractString)
   return str
 end
 
+"""
+  Checks if a package is installed, returning Void if not and
+  the version number if true
+
+  **Inputs**
+
+   * pkg: the package name
+"""
+function installed(pkg::AbstractString)
+  if isdir(joinpath(Pkg.dir(), pkg))
+    return Pkg.installed(pkg)
+  else
+    return Void
+  end
+end
+
+
 
 # functions that delegate to things in Pkg
 function status()
@@ -371,10 +393,6 @@ end
 
 function installed()
   Pkg.installed()
-end
-
-function installed(pkg::AbstractString)
-  Pkg.installed(pkg)
 end
 
 function resolve()
