@@ -25,7 +25,7 @@ function add(repo::AbstractString; branch_ish="")
 
   repo_name = getRepoName(repo)
 
-  if Pkg.installed(repo_name) != Void
+  if PkgFix.installed(repo_name) != Void
     println("Package already installed, not installing...")
     return nothing
   end
