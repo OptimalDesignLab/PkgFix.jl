@@ -2,7 +2,7 @@
 import Base.Pkg
 import Base.Pkg.Reqs
 using Base.Pkg.Types
-using Base.Pkg.Git
+#using Base.Pkg.Git
 
 
 """
@@ -237,7 +237,7 @@ function is_commit(pkg_dir::AbstractString, hash::AbstractString)
   
   iscommit = false
   try
-    vals = readall(`git show-ref | grep $hash`)
+    vals = readstring(`git show-ref | grep $hash`)
     # make sure this is an exact match
     name = split(vals, '/')[end]
     if name[1:end-1] == hash
