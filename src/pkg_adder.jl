@@ -132,6 +132,7 @@ function checkout(pkg::AbstractString, branch_ish)
     cd(joinpath(Pkg.dir(), pkg))
 
     if is_commit(pwd(), branch_ish)
+      run(`git checkout $branch_ish`)
       run(`git checkout -b detatched_from_$branch_ish`)
     else
       run(`git checkout $branch_ish`)
@@ -219,7 +220,7 @@ end
 
 """
   This function determines if a git identifier is a commit or something else
-  (ie. a branch or tag)
+  (ie. a branch or tag).  Throws an exception if neither.
 
   **Inputs**
 
@@ -249,7 +250,25 @@ function is_commit(pkg_dir::AbstractString, hash::AbstractString)
     iscommit = true
   end
 
-  cd(start_dir)
+  # if its not a branch/tag, make sure it really is a commit
+  commit_not_found = false
+  if iscommit
+    try
+      val = chomp(readstring(`git cat-file -t $hash`))
+      if val != "commit"
+        commit_not_found = true
+      end
+    catch
+      commit_not_found = true
+    end
+  end
+
+  if commit_not_found
+    cd(start_dir)
+    error("Identifier $hash is neither a git branch/tag nor a commit")
+  end
+
+
   return iscommit
 end
 
