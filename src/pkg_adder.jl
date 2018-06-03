@@ -73,10 +73,6 @@ function clone(repo::AbstractString, branch_ish="")
 
   pth1 = joinpath(Pkg.dir(), repo_name)
   pth2 = joinpath(Pkg.dir(), repo_name_ext)
-  println("pth1 = ", pth1)
-  println("pth2 = ", pth2)
-  println("isdir(pth1) = ", isdir(pth1))
-  println("isdir(pth2) = ", isdir(pth2))
 
   if isdir(joinpath( Pkg.dir(), repo_name)) || isdir(joinpath( Pkg.dir(), repo_name_ext))
     println(STDERR, "Package $repo_name already exists, not cloning...")
@@ -127,6 +123,7 @@ end
 function checkout(pkg::AbstractString, branch_ish)
 
   start_dir = pwd()
+  println("checkout out ", branch_ish, " of package ", pkg)
 
   try
     cd(joinpath(Pkg.dir(), pkg))
